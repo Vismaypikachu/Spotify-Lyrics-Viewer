@@ -64,6 +64,18 @@ const About: React.FC = () => {
           </Link>
         </Typography>
       </Box>
+
+      <Box mt={16}>
+        <Typography align="center">
+          <Link
+            href="https://vismaypatel.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Vismay's Website
+          </Link>
+        </Typography>
+      </Box>
     </div>
   );
 };
