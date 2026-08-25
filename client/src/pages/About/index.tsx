@@ -39,7 +39,7 @@ const About: React.FC = () => {
       <Box mt={3}>
         <Typography align="center">
           <Link
-            href="https://github.com/Vismaypikachu/Spotify-Lyrics-Viewer"
+            href="https://github.com/brentvollebregt/spotify-lyrics-viewer"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -60,7 +60,7 @@ const About: React.FC = () => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Nitratine.net
+            Check out Brent's other projects on Nitratine.net
           </Link>
         </Typography>
       </Box>
