@@ -127,8 +127,9 @@ const LyricsDisplay: React.FunctionComponent<IProps> = ({ lyricsDetails, progres
         </Typography>
         <Box mt={2} textAlign="left">
           <Typography id="lyrics-provider">
-            <Link href={lyricsDetails.attribution}>
-              Lyrics for {lyricsDetails.title} by {lyricsDetails.artist}
+            Lyrics for {lyricsDetails.title} by {lyricsDetails.artist} —{" "}
+            <Link href={lyricsDetails.attribution} target="_blank" rel="noopener noreferrer">
+              {lyricsDetails.attribution.includes("genius.com") ? "Genius" : "LRCLIB"}
             </Link>
           </Typography>
         </Box>
