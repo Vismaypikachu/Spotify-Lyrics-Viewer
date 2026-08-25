@@ -62,7 +62,7 @@ app.use(lyricsSubRoute, LyricsRoutes);
 
 const port = process.env.PORT || 5000;
 
-if (require.main === module) {
+if (process.env.VERCEL !== "1") {
   if (!isProduction) {
     https
       .createServer(
