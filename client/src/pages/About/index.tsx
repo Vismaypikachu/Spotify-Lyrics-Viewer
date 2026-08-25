@@ -9,28 +9,59 @@ const About: React.FC = () => {
       </Typography>
 
       <Typography gutterBottom>
-        Spotify Lyrics Viewer is a tool that allows you to view the lyrics of the current playing
-        song on Spotify.
+        Spotify Lyrics Viewer is a tool that allows you to view the lyrics of
+        the current playing song on Spotify.
       </Typography>
+
       <Typography gutterBottom>
-        To do this, we first log you into Spotify so we can see the current song playing. The title
-        and artist are then used to try and find the lyrics on{" "}
-        <Link href="https://genius.com/">GENIUS</Link> and whatever lyrics matched the best are
-        displayed to you.
+        I loved using the original Spotify Lyrics Viewer, but unfortunately,
+        the original site was taken down. I decided to fork the project and
+        bring it back online so it could continue to be useful.
       </Typography>
+
       <Typography gutterBottom>
-        Please note that the lyrics returned may not be for the current playing song in some
-        situations due the the lyrics not existing on GENIUS or the fact that the current playing
-        songs title has some extra content to it aside from the actual title.
+        To do this, we first log you into Spotify so we can see the current
+        song playing. The title and artist are then used to try and find the
+        lyrics on{" "}
+        <Link href="https://genius.com/" target="_blank" rel="noopener noreferrer">
+          GENIUS
+        </Link>{" "}
+        and whatever lyrics matched the best are displayed to you.
+      </Typography>
+
+      <Typography gutterBottom>
+        Please note that the lyrics returned may not be for the current
+        playing song in some situations due to the lyrics not existing on
+        GENIUS or the current playing song's title having extra content aside
+        from the actual title.
       </Typography>
 
       <Box mt={3}>
         <Typography align="center">
-          <Link href="https://github.com/brentvollebregt/spotify-lyrics-viewer">Source</Link>
+          <Link
+            href="https://github.com/Vismaypikachu/Spotify-Lyrics-Viewer"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Source
+          </Link>
           {" • "}
-          <Link href="https://github.com/brentvollebregt">Brent Vollebregt</Link>
+          Original project by{" "}
+          <Link
+            href="https://github.com/brentvollebregt"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Brent Vollebregt
+          </Link>
           {" • "}
-          <Link href="https://nitratine.net/">Nitratine.net</Link>
+          <Link
+            href="https://nitratine.net/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Nitratine.net
+          </Link>
         </Typography>
       </Box>
     </div>
