@@ -3,8 +3,7 @@ import { Lrc, Lyric } from "lrc-kit";
 import { IFoundLyrics } from "../dto";
 
 const LRCLIB_BASE_URL = "https://lrclib.net";
-const LRCLIB_USER_AGENT =
-  "Spotify Lyrics Viewer (https://github.com/brentvollebregt/spotify-lyrics-viewer)";
+const LRCLIB_USER_AGENT ="Spotify Lyrics Viewer (https://github.com/Vismaypikachu/Spotify-Lyrics-Viewer)";
 
 export async function getLyrics(
   artists: string[],

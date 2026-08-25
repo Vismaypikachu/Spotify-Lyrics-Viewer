@@ -97,7 +97,7 @@ const Navigation: React.FunctionComponent<IProps> = ({
 
           <div className={classes.grow} />
 
-          <Link href="https://github.com/brentvollebregt/spotify-lyrics-viewer">
+          <Link href="https://github.com/Vismaypikachu/Spotify-Lyrics-Viewer">
             <IconButton>
               <GitHubIcon />
             </IconButton>
