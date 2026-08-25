@@ -36,7 +36,19 @@ const About: React.FC = () => {
         from the actual title.
       </Typography>
 
-      <Box mt={3}>
+      <Box mt={8}>
+        <Typography align="center">
+          <Link
+            href="https://vismaypatel.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Vismay's Website
+          </Link>
+        </Typography>
+      </Box>
+
+      <Box mt={16}>
         <Typography align="center">
           <Link
             href="https://github.com/brentvollebregt/spotify-lyrics-viewer"
@@ -61,18 +73,6 @@ const About: React.FC = () => {
             rel="noopener noreferrer"
           >
             Check out Brent's other projects on Nitratine.net
-          </Link>
-        </Typography>
-      </Box>
-
-      <Box mt={16}>
-        <Typography align="center">
-          <Link
-            href="https://vismaypatel.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Vismay's Website
           </Link>
         </Typography>
       </Box>
