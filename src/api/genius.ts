@@ -99,55 +99,60 @@ const getGeniusPath = async (
 };
 
 function getTitle($: CheerioStatic) {
-  const attempt1 = $("h1.header_with_cover_art-primary_info-title").text();
-  if (attempt1 !== "") {
-    return attempt1;
-  }
+  const title = $("meta[property='og:title']").attr("content");
 
-  const attempt2 = $("h1[class*=SongHeaderdesktop__]").text();
-  if (attempt2 !== "") {
-    return attempt2;
+  if (title) {
+    return title.replace(/\s*Lyrics\s*$/i, "").trim();
   }
 
   return "";
 }
 
 function getArtist($: CheerioStatic) {
-  const attempt1 = $("a.header_with_cover_art-primary_info-primary_artist").text();
-  if (attempt1 !== "") {
-    return attempt1;
-  }
+  const artist = $("meta[property='og:description']").attr("content");
 
-  const attempt2 = $("a[class*=HeaderArtistAndTracklistdesktop__Artist-]").text();
-  if (attempt2 !== "") {
-    return attempt2;
+  if (artist) {
+    const match = artist.match(/^(.+?)\s*-\s*.+$/);
+
+    if (match) {
+      return match[1].trim();
+    }
   }
 
   return "";
 }
 
 function getLyricContents($: CheerioStatic) {
-  $("a", ".lyrics").each((index, element) => {
-    const e = $(element);
-    const elementHtml = e.html();
-    if (elementHtml === null) throw new Error("Unexpected application state: elementHtml === null");
-    return e.replaceWith(elementHtml);
-  }); // Replace out all links in the scope
-  const attempt1 = $($(".lyrics")[0]).text().trim();
-  if (attempt1 !== "") {
-    return attempt1;
+  const containers = $("div[data-lyrics-container='true']");
+
+  if (containers.length === 0) {
+    return "";
   }
 
-  $("div[class*=Lyrics__Root-]").children().find("br").replaceWith("\n");
-  const attempt2 = $("div[class*=Lyrics__Container-]").text();
-  if (attempt2 !== "") {
-    return attempt2;
+  containers.find("br").replaceWith("\n");
+
+  let lyrics = containers
+    .map((_, element) => $(element).text().trim())
+    .get()
+    .filter(text => text !== "")
+    .join("\n\n")
+    .trim();
+
+  // Remove Genius metadata before the first lyrics section.
+  const firstSection = lyrics.search(/\[(Intro|Verse|Pre-Chorus|Chorus|Bridge|Outro|Hook|Refrain|Post-Chorus)/i);
+
+  if (firstSection !== -1) {
+    lyrics = lyrics.substring(firstSection).trim();
   }
 
-  return "";
+  return lyrics;
 }
 
-export const getLyricsForPath = async (geniusPath: string): Promise<IFoundLyrics | null> => {
+export const getLyricsForPath = async (
+  geniusPath: string,
+  artist: string,
+  title: string
+): Promise<IFoundLyrics | null> => {
   const requestUrl = `https://genius.com${geniusPath}`;
 
   try {
@@ -161,11 +166,9 @@ export const getLyricsForPath = async (geniusPath: string): Promise<IFoundLyrics
 
     const html = response.data;
     const $ = cheerio.load(html); // Load in the page
-    const title = getTitle($);
-    const artist = getArtist($);
     const lyrics = getLyricContents($);
 
-    if (lyrics === undefined) {
+    if (lyrics === "") {
       return null;
     }
 
@@ -207,11 +210,23 @@ export const getLyrics = async (
   durationMs: number,
   geniusApiToken: string
 ) => {
-  const geniusPath = await getGeniusPath(artists, title, albumName, durationMs, geniusApiToken);
+  const geniusPath = await getGeniusPath(
+    artists,
+    title,
+    albumName,
+    durationMs,
+    geniusApiToken
+  );
+
   if (geniusPath === null) {
     return null;
   }
 
-  const lyrics = await getLyricsForPath(geniusPath);
+  const lyrics = await getLyricsForPath(
+    geniusPath,
+    artists[0],
+    title
+  );
+
   return lyrics;
 };
