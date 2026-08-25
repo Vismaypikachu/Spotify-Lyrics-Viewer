@@ -125,7 +125,7 @@ const LyricsDisplay: React.FunctionComponent<IProps> = ({ lyricsDetails, progres
 
           <span id="lyrics-upcoming">{lyricsState.after}</span>
         </Typography>
-        <Box mt={2} textAlign="left">
+        <Box mt={2} textAlign="center">
           <Typography id="lyrics-provider">
             Lyrics for {lyricsDetails.title} by {lyricsDetails.artist} —{" "}
             <Link href={lyricsDetails.attribution} target="_blank" rel="noopener noreferrer">
