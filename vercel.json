@@ -1,26 +1,15 @@
 {
   "version": 2,
-  "builds": [
+  "buildCommand": "npm run build && npm run render-postbuild",
+  "outputDirectory": "client/build",
+  "rewrites": [
     {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
+      "source": "/api/:path*",
+      "destination": "/api"
     },
     {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/client/$1"
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }
