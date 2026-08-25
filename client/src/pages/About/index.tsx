@@ -3,7 +3,7 @@ import React from "react";
 
 const About: React.FC = () => {
   return (
-    <div style={{ maxWidth: 600, margin: "auto" }}>
+    <div style={{ margin: "auto" }}>
       <Typography variant="h4" align="center" gutterBottom>
         About
       </Typography>
