@@ -62,21 +62,24 @@ app.use(lyricsSubRoute, LyricsRoutes);
 
 const port = process.env.PORT || 5000;
 
-if (!isProduction) {
-  // Even when running locally, we need to use HTTPS. Read the README for details.
-  https
-    .createServer(
-      {
-        cert: fs.readFileSync("server.cert"),
-        key: fs.readFileSync("server.key")
-      },
-      app
-    )
-    .listen(port, () => {
-      console.log(`Listening on ${port} with HTTPS`);
+if (require.main === module) {
+  if (!isProduction) {
+    https
+      .createServer(
+        {
+          cert: fs.readFileSync("server.cert"),
+          key: fs.readFileSync("server.key")
+        },
+        app
+      )
+      .listen(port, () => {
+        console.log(`Listening on ${port} with HTTPS`);
+      });
+  } else {
+    app.listen(port, () => {
+      console.log(`Listening on ${port}`);
     });
-} else {
-  app.listen(port, () => {
-    console.log(`Listening on ${port}`);
-  });
+  }
 }
+
+export default app;
