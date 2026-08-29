@@ -17,7 +17,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-metatags-hook": "^1.1.2",
-    "react-scripts": "^4.0.3",
+    "react-scripts": "4.0.3",
     "sitemap": "^7.1.1",
     "spotify-web-api-js": "^1.2.0",
     "ts-node": "^10.7.0",
@@ -26,7 +26,7 @@
   "scripts": {
     "start": "react-scripts start",
     "prebuild": "ts-node -O {\\\"module\\\":\\\"commonjs\\\"} tools/generate-sitemap.ts",
-    "build": "react-scripts build",
+    "build": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
     "postbuild": "ts-node -O {\\\"module\\\":\\\"commonjs\\\"} tools/copy-index.ts",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"

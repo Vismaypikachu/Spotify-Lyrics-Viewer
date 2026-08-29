@@ -8,18 +8,18 @@ const About: React.FC = () => {
         About
       </Typography>
 
-      <Typography gutterBottom>
+      <Typography align="center" gutterBottom>
         Spotify Lyrics Viewer is a tool that allows you to view the lyrics of
         the current playing song on Spotify.
       </Typography>
 
-      <Typography gutterBottom>
+      <Typography align="center" gutterBottom>
         I loved using the original Spotify Lyrics Viewer, but unfortunately,
         the original site was taken down. I decided to fork the project and
         bring it back online so it could continue to be useful.
       </Typography>
 
-      <Typography gutterBottom>
+      <Typography align="center" gutterBottom>
         To do this, we first log you into Spotify so we can see the current
         song playing. The title and artist are then used to try and find the
         lyrics on{" "}
@@ -29,7 +29,7 @@ const About: React.FC = () => {
         and whatever lyrics matched the best are displayed to you.
       </Typography>
 
-      <Typography gutterBottom>
+      <Typography align="center" gutterBottom>
         Please note that the lyrics returned may not be for the current
         playing song in some situations due to the lyrics not existing on
         GENIUS or the current playing song's title having extra content aside
