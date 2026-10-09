@@ -5,13 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 const localStorageKey = "dark-theme";
 
 const useThemeState = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const theme = useMemo(() => getTheme(darkMode), [darkMode]);
 
   // Pull current state out of local storage
   useEffect(() => {
     const rawState = localStorage.getItem(localStorageKey);
-    setDarkMode(rawState !== null);
+    setDarkMode(rawState !== null || rawState === "enabled");
   }, []);
 
   // Save to local storage while toggling
