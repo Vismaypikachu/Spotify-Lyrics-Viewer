@@ -8,15 +8,18 @@ import {
   Typography,
   makeStyles
 } from "@material-ui/core";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import CloseIcon from "@material-ui/icons/Close";
 import SearchIcon from "@material-ui/icons/Search";
 import SyncEnabledIcon from "@material-ui/icons/Sync";
 import SyncDisabledIcon from "@material-ui/icons/SyncDisabled";
+import TranslateIcon from "@material-ui/icons/Translate";
 import ZoomInIcon from "@material-ui/icons/ZoomIn";
 import ZoomOutIcon from "@material-ui/icons/ZoomOut";
 import MarkJS from "mark.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { IFoundLyrics } from "../../../../src/dto";
+import { translateLyric } from "../../api/translation";
 import useSmoothProgress from "../../hooks/useSmoothProgress";
 import "./LyricsDisplay.css";
 
@@ -107,6 +110,63 @@ const LyricsDisplay: React.FunctionComponent<IProps> = ({
     setFontSize(size => Math.max(size - 0.1, 0.6));
   };
 
+  const [translationEnabled, setTranslationEnabled] = useState(false);
+  const [translation, setTranslation] = useState("");
+  const [translationLoading, setTranslationLoading] = useState(false);
+  const translationCache = useRef(new Map<string, string>());
+
+  const toggleTranslation = () => {
+    setTranslationEnabled(enabled => !enabled);
+  };
+
+
+  useEffect(() => {
+    const lyric = lyricsState.highlighted.trim();
+    let cancelled = false;
+
+    if (!translationEnabled || !lyric) {
+      setTranslation("");
+      setTranslationLoading(false);
+      return;
+    }
+
+    const cached = translationCache.current.get(lyric);
+
+    if (cached !== undefined) {
+      setTranslation(cached);
+      setTranslationLoading(false);
+      return;
+    }
+
+    // Keep the translation area stable without showing a spinner
+    // every time the highlighted lyric changes.
+    setTranslation("");
+    setTranslationLoading(false);
+
+    translateLyric(lyric)
+      .then(result => {
+        if (cancelled) return;
+
+        const translated = result ?? "";
+
+        if (translated) {
+          translationCache.current.set(lyric, translated);
+        }
+
+        setTranslation(translated);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setTranslation("");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lyricsState.highlighted, translationEnabled]);
+
+
   return (
     <div className={classes.root}>
       <Toolbar className={classes.toolbar}>
@@ -156,6 +216,15 @@ const LyricsDisplay: React.FunctionComponent<IProps> = ({
         >
           {syncEnabled ? <SyncEnabledIcon /> : <SyncDisabledIcon />}
         </IconButton>
+
+        <IconButton
+          onClick={toggleTranslation}
+          color={translationEnabled ? "primary" : "default"}
+          aria-label="Toggle lyric translation"
+          title={translationEnabled ? "Disable translation" : "Enable translation"}
+        >
+          <TranslateIcon />
+        </IconButton>
       </Toolbar>
 
       <div>
@@ -178,6 +247,25 @@ const LyricsDisplay: React.FunctionComponent<IProps> = ({
               >
                 {lyricsState.highlighted}
               </span>
+              {translationEnabled && (
+                <Typography
+                  component="div"
+                  style={{
+                    fontSize: `${3.0 * fontSize}em`,
+                    fontWeight: "normal",
+                    fontStyle: "italic",
+                    marginTop: 8,
+                    opacity: 0.85,
+                    height: "1.2em",
+                    lineHeight: "1.2em",
+                    overflow: "hidden",
+                    flexShrink: 0,
+                    visibility: translation || translationLoading ? "visible" : "hidden"
+                  }}
+                >
+                  {translation || "\u00A0"}
+                </Typography>
+              )}
             </div>
           )}
 

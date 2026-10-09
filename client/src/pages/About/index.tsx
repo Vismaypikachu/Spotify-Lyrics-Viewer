@@ -16,7 +16,9 @@ const About: React.FC = () => {
       <Typography align="center" gutterBottom>
         I loved using the original Spotify Lyrics Viewer, but unfortunately,
         the original site was taken down. I decided to fork the project and
-        bring it back online so it could continue to be useful.
+        bring it back online so it could continue to be useful. I've added a couple
+        additional features that I thought would be nice to have. Let me know if you
+        have any changes you would like to make!
       </Typography>
 
       <Typography align="center" gutterBottom>

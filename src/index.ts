@@ -10,6 +10,7 @@ import Config from "./config";
 import LyricsRoutes, { subRoute as lyricsSubRoute } from "./routes/lyrics";
 import SessionRoutes, { subRoute as sessionSubRoute } from "./routes/session";
 import SpotifyRoutes, { subRoute as spotifySubRoute } from "./routes/spotify";
+import TranslateRoutes, { subRoute as translateSubRoute } from "./routes/translate";
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
@@ -59,6 +60,7 @@ Config.client.routes.forEach(route =>
 app.use(sessionSubRoute, SessionRoutes);
 app.use(spotifySubRoute, SpotifyRoutes);
 app.use(lyricsSubRoute, LyricsRoutes);
+app.use(translateSubRoute, TranslateRoutes);
 
 const port = process.env.PORT || 5000;
 
