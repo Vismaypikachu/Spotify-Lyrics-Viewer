@@ -147,4 +147,69 @@ router.get("/refresh-token", async (req, res) => {
   res.end();
 });
 
+
+router.get("/queue", async (req, res) => {
+  if (req.session === null) {
+    res.status(401).json({ error: "Session has not been set" });
+    return;
+  }
+
+  if (!isStoredTokenValid(req)) {
+    res.status(401).json({ error: "No token available" });
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      "https://api.spotify.com/v1/me/player/queue",
+      {
+        headers: {
+          Authorization: `Bearer ${req.session.access_token}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Spotify queue request failed:", response.status, errorText);
+
+      res.status(response.status).json({
+        error: "Unable to retrieve Spotify queue"
+      });
+      return;
+    }
+
+    const data = await response.json() as {
+      queue?: Array<any>;
+    };
+
+    const queue = (data.queue ?? []).slice(0, 10).map(item => {
+      const isTrack = item.type === "track";
+      const artists = isTrack
+        ? (item.artists ?? []).map((artist: { name: string }) => artist.name)
+        : [item.show?.name ?? "Podcast"];
+
+      const images = isTrack
+        ? item.album?.images
+        : item.images ?? item.show?.images;
+
+      return {
+        id: item.id,
+        name: item.name,
+        artists,
+        imageUrl: images?.[0]?.url ?? null,
+        type: item.type
+      };
+    });
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ queue });
+  } catch (error) {
+    console.error("Failed to retrieve Spotify queue:", error);
+    res.status(500).json({ error: "Unable to retrieve Spotify queue" });
+  }
+});
+
+
 export default router;

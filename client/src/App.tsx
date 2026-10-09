@@ -1,4 +1,10 @@
-import { Box, Container, CssBaseline, ThemeProvider } from "@material-ui/core";
+import {
+  Box,
+  Container,
+  CssBaseline,
+  ThemeProvider,
+  makeStyles
+} from "@material-ui/core";
 import { setBasepath, useRedirect, useRoutes } from "hookrouter";
 import React, { useEffect, useState } from "react";
 import { deleteSession, spotifyGetCurrentToken } from "./api";
@@ -16,6 +22,7 @@ import LyricsView from "./pages/LyricsView";
 import NotFound from "./pages/NotFound";
 import SpotifyAuthorization from "./pages/SpotifyAuthorization";
 import { IToken } from "./types/token";
+import QueueSidebar from "./components/QueueSidebar";
 
 const App: React.FC = () => {
   const [token, setToken] = useState<IToken | null>(null);
@@ -72,6 +79,8 @@ const App: React.FC = () => {
   const routeResult = useRoutes(routes);
   useRedirect("/about/", "/about");
 
+  const classes = useStyles();
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -84,7 +93,21 @@ const App: React.FC = () => {
         />
 
         <Box py={3} style={{ overflow: "auto" }}>
-          <Container maxWidth="md">{routeResult ?? <NotFound />}</Container>
+          <Container maxWidth="xl">
+            <Box className={classes.contentLayout}>
+              <Box className={classes.mainContent}>
+                {routeResult ?? <NotFound />}
+              </Box>
+
+              <Box className={classes.queueColumn}>
+                <QueueSidebar
+                  currentTrackId={
+                    currentlyPlayingSong.currentlyPlayingObject?.item?.id ?? null
+                  }
+                />
+              </Box>
+            </Box>
+          </Container>
         </Box>
 
         <Player currentlyPlayingSong={currentlyPlayingSong} token={token} />
@@ -92,5 +115,38 @@ const App: React.FC = () => {
     </ThemeProvider>
   );
 };
+
+const useStyles = makeStyles(theme => ({
+  contentLayout: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) 280px",
+    gap: theme.spacing(3),
+    alignItems: "start",
+
+    [theme.breakpoints.down("sm")]: {
+      gridTemplateColumns: "minmax(0, 1fr)"
+    }
+  },
+
+  mainContent: {
+    minWidth: 0
+  },
+
+  
+  queueColumn: {
+    position: "fixed",
+    top: 145,
+    right: 24,
+    width: 350,
+    maxHeight: "calc(100vh - 245px)",
+    overflowY: "auto",
+    overflowX: "hidden",
+    zIndex: 10,
+
+    [theme.breakpoints.down("sm")]: {
+      display: "none"
+    }
+  }
+}));
 
 export default App;
