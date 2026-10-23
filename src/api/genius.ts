@@ -190,6 +190,13 @@ export const getLyricsForPath = async (
       validateStatus: status => status === 200 || status === 404
     });
 
+    console.log("Genius page response:", {
+      status: response.status,
+      url: response.request?.res?.responseUrl,
+      contentType: response.headers["content-type"],
+      cloudflareChallenge: response.headers["cf-mitigated"]
+    });
+
     if (response.status === 404) {
       return null;
     }
