@@ -41,12 +41,12 @@ router.get("/", async (req, res) => {
   // Local files: use Genius directly, without querying LRCLIB.
   if (isLocalTrack) {
     if (config.genius.access_token !== undefined) {
-      console.log("Local Genius lookup:", {
-        title,
-        artists: artistArray,
-        album,
-        tokenConfigured: config.genius.access_token !== undefined
-      });
+      // console.log("Local Genius lookup:", {
+      //   title,
+      //   artists: artistArray,
+      //   album,
+      //   tokenConfigured: config.genius.access_token !== undefined
+      // });
 
       const lyricsFromGenius = await getLyricsFromGenius(
         artistArray,
@@ -57,10 +57,10 @@ router.get("/", async (req, res) => {
         true
       );
 
-      console.log(
-        "Local Genius result:",
-        lyricsFromGenius ? "lyrics found" : "no lyrics found"
-      );
+      // console.log(
+      //   "Local Genius result:",
+      //   lyricsFromGenius ? "lyrics found" : "no lyrics found"
+      // );
 
       if (lyricsFromGenius !== null) {
         res.send(lyricsFromGenius);

@@ -74,12 +74,12 @@ const useLyrics = (currentlyPlaying: CurrentlyPlayingState) => {
           )
           .trim();
         
-        console.log("Lyrics lookup:", {
-          isLocalTrack,
-          originalName: item.name,
-          title: trackNameWithReplacements,
-          artists
-        });
+        // console.log("Lyrics lookup:", {
+        //   isLocalTrack,
+        //   originalName: item.name,
+        //   title: trackNameWithReplacements,
+        //   artists
+        // });
 
         const album = item.album?.name ?? "";
 

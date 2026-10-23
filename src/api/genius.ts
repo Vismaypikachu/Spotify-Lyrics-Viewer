@@ -74,11 +74,11 @@ export async function searchGenius(
 
     const searchResults = response.data.response;
 
-    console.log("Genius query:", term);
-    console.log(
-      "Genius results:",
-      searchResults.hits.map(hit => hit.result.full_title)
-    );
+    // console.log("Genius query:", term);
+    // console.log(
+    //   "Genius results:",
+    //   searchResults.hits.map(hit => hit.result.full_title)
+    // );
 
     return searchResults;
   } catch (error) {
@@ -264,10 +264,10 @@ export const getLyrics = async (
 
       const search = await searchGenius(searchTerm, geniusApiToken);
 
-      console.log(
-        "Genius search results:",
-        search?.hits.map(hit => hit.result.full_title)
-      );
+      // console.log(
+      //   "Genius search results:",
+      //   search?.hits.map(hit => hit.result.full_title)
+      // );
 
       if (!search || search.hits.length === 0) {
         continue;
