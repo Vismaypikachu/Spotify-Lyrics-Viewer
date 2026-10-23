@@ -67,21 +67,20 @@ export async function getLyrics(
       syncedLyrics: syncedLyrics,
       attribution: LRCLIB_BASE_URL
     } as IFoundLyrics;
+  
   } catch (e) {
-    // Anything non-200 or 404 is considered an error
-    console.warn(`Failed to call '${requestUrl}'`);
-
-    if (e instanceof Error && e.stack !== undefined) {
-      console.warn(e.stack);
+    if (axios.isAxiosError(e) && e.response?.status === 503) {
+      console.warn("LRCLIB is temporarily unavailable (503); trying fallback lyrics providers.");
+      return null;
     }
+
+    console.warn(`Failed to call '${requestUrl}'`);
 
     if (axios.isAxiosError(e)) {
       if (e.response !== undefined) {
-        console.log(`Response: HTTP${e.response.status} ${e.response.statusText}`);
-        console.log(`Response headers: ${JSON.stringify(e.response.headers)}`);
-        console.log(`Response data: ${JSON.stringify(e.response.data)}`);
+        console.warn(`Response: HTTP${e.response.status} ${e.response.statusText}`);
       } else {
-        console.log("No response");
+        console.warn("No response from LRCLIB:", e.message);
       }
     } else {
       console.warn(e);

@@ -54,15 +54,37 @@ export interface ISearchResponse {
   hits: Hit[];
 }
 
-export function searchGenius(term: string, geniusApiToken: string): Promise<ISearchResponse> {
-  const parameters = {
+export interface ISearchApiResponse {
+  response: ISearchResponse;
+}
+
+export async function searchGenius(
+  term: string,
+  geniusApiToken: string
+): Promise<ISearchResponse> {
+  const parameters = new URLSearchParams({
     access_token: geniusApiToken,
-    q: diacritics.remove(term)
-  };
-  return axios
-    .get("https://api.genius.com/search?" + new URLSearchParams(parameters))
-    .then(response => response.data.response)
-    .catch(e => console.error(e.data));
+    q: term
+  });
+
+  const requestUrl = `https://api.genius.com/search?${parameters}`;
+
+  try {
+    const response = await axios.get<ISearchApiResponse>(requestUrl);
+
+    const searchResults = response.data.response;
+
+    console.log("Genius query:", term);
+    console.log(
+      "Genius results:",
+      searchResults.hits.map(hit => hit.result.full_title)
+    );
+
+    return searchResults;
+  } catch (error) {
+    console.error("Genius search failed for:", term, error);
+    return { hits: [] };
+  }
 }
 
 const getGeniusPath = async (
@@ -203,15 +225,83 @@ export const getLyricsForPath = async (
   }
 };
 
+
 export const getLyrics = async (
   artists: string[],
   title: string,
   albumName: string,
   durationMs: number,
-  geniusApiToken: string
-) => {
+  geniusApiToken: string,
+  isLocalTrack = false
+): Promise<IFoundLyrics | null> => {
+  const validArtists = artists.filter(
+    artist =>
+      artist.trim() !== "" &&
+      !/^unknown artist$/i.test(artist.trim())
+  );
+
+  if (isLocalTrack || validArtists.length === 0) {
+    const normalize = (value: string) =>
+      diacritics
+        .remove(value)
+        .toLowerCase()
+        .replace(/\([^)]*\)|\[[^\]]*\]/g, "")
+        .replace(/[^\w\s]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    // Search the full title first so remix-specific results can win.
+    const searchTitles = [
+      title,
+      title.replace(
+        /\s*[\[(](?:bonus track|deluxe edition|bonus edition|explicit version|clean version|single version|album version)[\])]\s*$/i,
+        ""
+      ).trim()
+    ].filter((value, index, values) => value && values.indexOf(value) === index);
+
+    for (const searchTitle of searchTitles) {
+      const searchTerm = `${validArtists[0]} ${searchTitle}`;
+
+      const search = await searchGenius(searchTerm, geniusApiToken);
+
+      console.log(
+        "Genius search results:",
+        search?.hits.map(hit => hit.result.full_title)
+      );
+
+      if (!search || search.hits.length === 0) {
+        continue;
+      }
+
+      const normalizedTitle = normalize(searchTitle);
+
+      const matchingHit =
+        search.hits.find(
+          hit => normalize(hit.result.title) === normalizedTitle
+        ) ??
+        search.hits.find(hit => {
+          const resultTitle = normalize(hit.result.title);
+          return (
+            resultTitle.includes(normalizedTitle) ||
+            normalizedTitle.includes(resultTitle)
+          );
+        });
+
+      if (matchingHit) {
+        return getLyricsForPath(
+          matchingHit.result.path,
+          matchingHit.result.primary_artist.name,
+          matchingHit.result.title
+        );
+      }
+    }
+
+    return null;
+  }
+
+  // Preserve existing behavior for regular Spotify tracks.
   const geniusPath = await getGeniusPath(
-    artists,
+    validArtists,
     title,
     albumName,
     durationMs,
@@ -222,11 +312,10 @@ export const getLyrics = async (
     return null;
   }
 
-  const lyrics = await getLyricsForPath(
+  return getLyricsForPath(
     geniusPath,
-    artists[0],
+    validArtists[0],
     title
   );
-
-  return lyrics;
 };
+

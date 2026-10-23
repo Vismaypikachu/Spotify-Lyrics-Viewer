@@ -22,10 +22,13 @@ interface PlayerProps {
 const Player: React.FC<PlayerProps> = ({ currentlyPlayingSong, token }) => {
   const classes = useStyles();
 
-  let albumArt = currentlyPlayingSong.currentlyPlayingObject?.item?.album.images[0].url;
+  let albumArt = currentlyPlayingSong.currentlyPlayingObject?.item?.album?.images?.[0]?.url;
   let title = currentlyPlayingSong.currentlyPlayingObject?.item?.name ?? "---";
   let artist =
-    currentlyPlayingSong.currentlyPlayingObject?.item?.artists.map(a => a.name).join(", ") ?? "---";
+  currentlyPlayingSong.currentlyPlayingObject?.item?.artists
+    ?.map(a => a.name)
+    .filter(Boolean)
+    .join(", ") || "Unknown Artist";
   let durationMs = currentlyPlayingSong.currentlyPlayingObject?.item?.duration_ms ?? 0;
   const progressMs = currentlyPlayingSong.currentlyPlayingObject?.progress_ms ?? 0;
   const isPlaying = currentlyPlayingSong.currentlyPlayingObject?.is_playing ?? false;

@@ -1,24 +1,33 @@
 import { IFoundLyrics, ITokenExpiryPair } from "../../../src/dto";
 import Config from "../config";
 
+
 export function getLyrics(
   artists: string[],
   title: string,
   albumName: string,
-  duration: number
+  duration: number,
+  isLocalTrack = false
 ): Promise<IFoundLyrics | null> {
   const parameters = new URLSearchParams();
   parameters.append("title", title);
+
   for (const artist of artists) {
     parameters.append("artists", artist);
   }
+
   parameters.append("albumName", albumName);
   parameters.append("duration", duration.toString());
+
+  if (isLocalTrack) {
+    parameters.append("local", "true");
+  }
 
   return fetch(`${Config.api.root}/api/lyrics?${parameters}`).then(r =>
     r.status === 200 ? r.json() : null
   );
 }
+
 
 export function spotifyGetCurrentToken(): Promise<ITokenExpiryPair | null> {
   return fetch(`${Config.api.root}/api/spotify/token`, {

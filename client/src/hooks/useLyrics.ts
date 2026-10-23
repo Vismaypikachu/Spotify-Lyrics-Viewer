@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { IFoundLyrics } from "../../../src/dto";
 import { getLyrics } from "../api";
@@ -7,10 +8,9 @@ import { ITrackLyrics } from "../types/trackLyrics";
 const getLyricsPromiseCache: Record<string, Promise<IFoundLyrics | null>> = {};
 
 const useLyrics = (currentlyPlaying: CurrentlyPlayingState) => {
-  const [lyrics, setLyrics] = useState<ITrackLyrics | undefined>(undefined); // undefined = no lyrics yet, .lyrics=undefined = no lyrics exist
+  const [lyrics, setLyrics] = useState<ITrackLyrics | undefined>(undefined);
 
   useEffect(() => {
-    // Get new lyrics when the current playing item changes
     if (
       (currentlyPlaying.state !== PlayingStates.Playing &&
         currentlyPlaying.state !== PlayingStates.Paused) ||
@@ -18,66 +18,117 @@ const useLyrics = (currentlyPlaying: CurrentlyPlayingState) => {
     ) {
       setLyrics(undefined);
     } else {
-      const hasSongChanged =
-        currentlyPlaying.currentlyPlayingObject.item.id !== lyrics?.currentlyPlayingItemId;
+      const item = currentlyPlaying.currentlyPlayingObject.item;
+
+      // The installed Spotify typings omit is_local.
+      const isLocalTrack =
+        (item as typeof item & { is_local?: boolean }).is_local === true ||
+        item.uri?.startsWith("spotify:local:") === true;
+      const currentItemId = item.id ?? item.uri;
+      const hasSongChanged = currentItemId !== lyrics?.currentlyPlayingItemId;
+
       const lyricsAreEmpty =
         lyrics?.lyrics?.plainLyrics === undefined &&
         (lyrics?.lyrics?.syncedLyrics ?? undefined) === undefined;
+
       if (lyrics === undefined || hasSongChanged || lyricsAreEmpty) {
-        // Only remove the current lyrics if they aren't empty for some reason (to keep the "Trying again" message)
         if (!lyricsAreEmpty) {
           setLyrics(undefined);
         }
 
-        // Make replacements to track names to help better find lyrics
-        const trackNameWithReplacements = currentlyPlaying.currentlyPlayingObject.item.name
-          .replace(/ \(feat.+\)/i, "") // Remove (feat. ...)
-          .replace(/ \(ft.+\)/i, "") // Remove (ft. ...)
-          .replace(/ \(with.+\)/i, "") // Remove (with. ...)
-          .replace(/ - \d{4} - Remaster/i, "") // Remove "- 2021 - Remaster"
-          .replace(/ - (\d{4} )?Remaster(ed)?.*/i, "") // Remove "- Remastered" and "- 2016 Remastered" and "- Remastered 2011" and " - 2016 Remaster"
-          .replace(/ - Original Album Version/i, "") // Remove "- Original Album Version"
-          .replace(/ \(Live\)/i, "") // Remove " (Live)"
-          .replace(/ - Acoustic/i, "") // Remove " - Acoustic"
-          .replace(/ - from .*/i, "") // Remove " - from ..."
-          .replace(/ - Live from .*/i, "") // Remove " - Live from ..."
-          .replace(/ - Live/i, "") // Remove " - Live"
-          .replace(/ - \d{4} Mix/i, "") // Remove " - 2023 Mix"
-          .trim();
+        // Detect local files and split "Track Name - Artist".
+        const localTitleMatch = isLocalTrack
+          ? item.name.match(/^(.+?)\s+-\s+(.+)$/)
+          : null;
 
-        // Get lyrics
-        const getLyricsPromiseCacheKey = JSON.stringify({
-          artists: currentlyPlaying.currentlyPlayingObject.item.artists.map(x => x.name),
+        const localTitle = localTitleMatch
+          ? localTitleMatch[1].trim()
+          : item.name;
+
+        const localArtist = localTitleMatch
+          ? localTitleMatch[2].trim()
+          : "";
+
+        const artists = isLocalTrack
+          ? (localArtist ? [localArtist] : [])
+          : item.artists.map(x => x.name).filter(Boolean);
+
+        // Preserve existing cleanup for regular Spotify track titles.
+        
+        const trackNameWithReplacements = localTitle
+          .replace(/\s*\(feat.+\)/i, "")
+          .replace(/\s*\(ft.+\)/i, "")
+          .replace(/\s*\(with.+\)/i, "")
+          .replace(/ - \d{4} - Remaster/i, "")
+          .replace(/ - (\d{4} )?Remaster(ed)?.*/i, "")
+          .replace(/ - Original Album Version/i, "")
+          .replace(/\s*\(Live\)/i, "")
+          .replace(/ - Acoustic/i, "")
+          .replace(/ - from .*/i, "")
+          .replace(/ - Live from .*/i, "")
+          .replace(/ - Live/i, "")
+          .replace(/ - \d{4} Mix/i, "")
+          .replace(
+            isLocalTrack ? /\s*\(Bonus Track\)\s*$/i : /$^/,
+            ""
+          )
+          .trim();
+        
+        console.log("Lyrics lookup:", {
+          isLocalTrack,
+          originalName: item.name,
           title: trackNameWithReplacements,
-          album: currentlyPlaying.currentlyPlayingObject.item.album.name
+          artists
+        });
+
+        const album = item.album?.name ?? "";
+
+        const getLyricsPromiseCacheKey = JSON.stringify({
+          local: isLocalTrack,
+          artists,
+          title: trackNameWithReplacements,
+          album
         });
 
         const getLyricsPromise =
           getLyricsPromiseCache[getLyricsPromiseCacheKey] ??
           getLyrics(
-            currentlyPlaying.currentlyPlayingObject.item.artists.map(x => x.name),
+            artists,
             trackNameWithReplacements,
-            currentlyPlaying.currentlyPlayingObject.item.album.name,
-            currentlyPlaying.currentlyPlayingObject.item.duration_ms
+            album,
+            item.duration_ms,
+            isLocalTrack
           );
+
         getLyricsPromiseCache[getLyricsPromiseCacheKey] = getLyricsPromise;
 
         let didCancel = false;
+
         const processPromise = async () => {
-          const getLyricsResult = await getLyricsPromise;
+          try {
+            const getLyricsResult = await getLyricsPromise;
 
-          if (didCancel) {
-            return;
-          }
+            if (didCancel) {
+              return;
+            }
 
-          if (currentlyPlaying.currentlyPlayingObject.item !== null) {
             setLyrics({
-              currentlyPlayingItemId: currentlyPlaying.currentlyPlayingObject.item.id,
+              currentlyPlayingItemId: currentItemId,
               lyrics: getLyricsResult ?? undefined
             });
+          } catch (error) {
+            if (!didCancel) {
+              console.error("Unable to load lyrics:", error);
+              setLyrics({
+                currentlyPlayingItemId: currentItemId,
+                lyrics: undefined
+              });
+            }
           }
         };
+
         processPromise();
+
         return () => {
           didCancel = true;
         };

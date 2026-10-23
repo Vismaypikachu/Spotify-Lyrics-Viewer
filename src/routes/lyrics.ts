@@ -1,3 +1,4 @@
+
 import express from "express";
 import { getLyrics as getLyricsFromGenius } from "../api/genius";
 import { getLyrics as getLyricsFromLrcLib } from "../api/lrclib";
@@ -8,61 +9,102 @@ export const subRoute = "/api/lyrics";
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  // Verify expected parameters have been provided
-  const {
-    artists,
-    title,
-    albumName,
-    duration
-  }: {
-    artists: string | string[] | undefined;
-    title: string | undefined;
-    albumName: string | undefined;
-    duration: number | undefined;
-  } = req.query;
+  const { artists, title, albumName, duration } = req.query;
+  const isLocalTrack = req.query.local === "true";
+
   if (
-    artists === undefined ||
-    title === undefined ||
-    albumName === undefined ||
-    duration === undefined
+    typeof title !== "string" ||
+    title.trim() === "" ||
+    typeof duration !== "string" ||
+    duration.trim() === "" ||
+    !Number.isFinite(Number(duration)) ||
+    Number(duration) <= 0
   ) {
-    res.status(400).send("Please provide an 'artists', 'title', 'albumName', and 'duration'");
-    res.end();
+    res.status(400).send("Please provide a valid 'title' and 'duration'");
     return;
   }
 
-  // If only one artist came in, it will be a string
-  const artistArray = typeof artists === "string" ? [artists] : artists;
+  const artistArray = (
+    artists === undefined
+      ? []
+      : Array.isArray(artists)
+        ? artists
+        : [artists]
+  ).filter(
+    (artist): artist is string =>
+      typeof artist === "string" && artist.trim() !== ""
+  );
 
-  // First try to search directly for the song at lrclib.net
-  const lyricsFromLrcLib = await getLyricsFromLrcLib(artistArray, title, albumName, duration);
-  if (lyricsFromLrcLib !== null) {
-    res.send(lyricsFromLrcLib);
-    res.end();
+  const album = typeof albumName === "string" ? albumName : "";
+  const durationMs = Number(duration);
+
+  // Local files: use Genius directly, without querying LRCLIB.
+  if (isLocalTrack) {
+    if (config.genius.access_token !== undefined) {
+      console.log("Local Genius lookup:", {
+        title,
+        artists: artistArray,
+        album,
+        tokenConfigured: config.genius.access_token !== undefined
+      });
+
+      const lyricsFromGenius = await getLyricsFromGenius(
+        artistArray,
+        title,
+        album,
+        durationMs,
+        config.genius.access_token,
+        true
+      );
+
+      console.log(
+        "Local Genius result:",
+        lyricsFromGenius ? "lyrics found" : "no lyrics found"
+      );
+
+      if (lyricsFromGenius !== null) {
+        res.send(lyricsFromGenius);
+        return;
+      }
+    }
+
+    res.status(404).send("Unable to find lyrics");
     return;
   }
 
-  // TODO Try https://lrclib.net/api/search?q=Power+And+The+Passion+Midnight+Oil+10%2C9%2C8%2C7%2C6%2C5%2C4%2C3%2C2%2C1
-
-  // If everything fails, try Genius (if enabled)
-  if (config.genius.access_token !== undefined) {
-    const lyricsFromGenius = await getLyricsFromGenius(
+  // Regular tracks retain the existing LRCLIB-first behavior.
+  if (artistArray.length > 0) {
+    const lyricsFromLrcLib = await getLyricsFromLrcLib(
       artistArray,
       title,
-      albumName,
-      duration,
-      config.genius.access_token
+      album,
+      durationMs
     );
-    if (lyricsFromGenius !== null) {
-      res.send(lyricsFromGenius);
-      res.end();
+
+    if (lyricsFromLrcLib !== null) {
+      res.send(lyricsFromLrcLib);
       return;
     }
   }
 
-  // If we get here, nothing was found
+  // Fall back to Genius.
+  if (config.genius.access_token !== undefined) {
+    const lyricsFromGenius = await getLyricsFromGenius(
+      artistArray,
+      title,
+      album,
+      durationMs,
+      config.genius.access_token,
+      false
+    );
+
+    if (lyricsFromGenius !== null) {
+      res.send(lyricsFromGenius);
+      return;
+    }
+  }
+
   res.status(404).send("Unable to find lyrics");
-  res.end();
 });
 
 export default router;

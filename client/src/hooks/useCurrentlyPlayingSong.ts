@@ -31,8 +31,17 @@ const useCurrentlyPlayingSong = (token: IToken | null, invalidateToken: () => vo
         }
       })
       .catch((request: XMLHttpRequest) => {
-        if (request.status === 401) {
+        console.error("Failed to get current Spotify track:", {
+          status: request?.status,
+          statusText: request?.statusText,
+          responseText: request?.responseText,
+          response: request?.response,
+          readyState: request?.readyState
+        });
+
+        if (request?.status === 401) {
           invalidateToken();
+
           const { hide } = cogoToast.info("You have been logged out", {
             position: "bottom-center",
             heading: "Token expired",
@@ -40,15 +49,22 @@ const useCurrentlyPlayingSong = (token: IToken | null, invalidateToken: () => vo
             onClick: () => hide !== undefined && hide()
           });
         } else {
-          setCurrentlyPlaying({ state: PlayingStates.Error, currentlyPlayingObject: null });
-          const { hide } = cogoToast.error(request.responseText, {
-            position: "bottom-center",
-            heading: "Failed to Get Current Song",
-            hideAfter: 20,
-            onClick: () => hide !== undefined && hide()
+          setCurrentlyPlaying({
+            state: PlayingStates.Error,
+            currentlyPlayingObject: null
           });
+
+          const { hide } = cogoToast.error(
+            request?.responseText || request?.statusText || "Unknown Spotify API error",
+            {
+              position: "bottom-center",
+              heading: "Failed to Get Current Song",
+              hideAfter: 20,
+              onClick: () => hide !== undefined && hide()
+            }
+          );
         }
-      });
+    });
   };
 
   // Get currently playing song on load (when the token changes)
