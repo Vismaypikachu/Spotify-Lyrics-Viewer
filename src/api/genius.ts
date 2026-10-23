@@ -179,6 +179,14 @@ export const getLyricsForPath = async (
 
   try {
     const response = await axios.get<string>(requestUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
+      },
+      timeout: 15000,
       validateStatus: status => status === 200 || status === 404
     });
 
@@ -186,11 +194,11 @@ export const getLyricsForPath = async (
       return null;
     }
 
-    const html = response.data;
-    const $ = cheerio.load(html); // Load in the page
+    const $ = cheerio.load(response.data);
     const lyrics = getLyricContents($);
 
     if (lyrics === "") {
+      console.warn("Genius returned a page without lyrics:", requestUrl);
       return null;
     }
 
@@ -202,21 +210,17 @@ export const getLyricsForPath = async (
       syncedLyrics: null
     } as IFoundLyrics;
   } catch (e) {
-    // Anything non-200 or 404 is considered an error
-    console.warn(`Failed to call '${requestUrl}'`);
-
-    if (e instanceof Error && e.stack !== undefined) {
-      console.warn(e.stack);
-    }
+    console.warn(`Failed to fetch Genius lyrics page: ${requestUrl}`);
 
     if (axios.isAxiosError(e)) {
-      if (e.response !== undefined) {
-        console.log(`Response: HTTP${e.response.status} ${e.response.statusText}`);
-        console.log(`Response headers: ${JSON.stringify(e.response.headers)}`);
-        console.log(`Response data: ${JSON.stringify(e.response.data)}`);
-      } else {
-        console.log("No response");
-      }
+      console.warn("Genius HTTP status:", e.response?.status);
+      console.warn("Genius response headers:", e.response?.headers);
+      console.warn(
+        "Genius response body:",
+        typeof e.response?.data === "string"
+          ? e.response.data.slice(0, 500)
+          : e.response?.data
+      );
     } else {
       console.warn(e);
     }
