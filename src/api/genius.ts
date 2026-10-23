@@ -74,12 +74,6 @@ export async function searchGenius(
 
     const searchResults = response.data.response;
 
-    // console.log("Genius query:", term);
-    // console.log(
-    //   "Genius results:",
-    //   searchResults.hits.map(hit => hit.result.full_title)
-    // );
-
     return searchResults;
   } catch (error) {
     console.error("Genius search failed for:", term, error);
@@ -190,13 +184,6 @@ export const getLyricsForPath = async (
       validateStatus: status => status === 200 || status === 404
     });
 
-    console.log("Genius page response:", {
-      status: response.status,
-      url: response.request?.res?.responseUrl,
-      contentType: response.headers["content-type"],
-      cloudflareChallenge: response.headers["cf-mitigated"]
-    });
-
     if (response.status === 404) {
       return null;
     }
@@ -274,11 +261,6 @@ export const getLyrics = async (
       const searchTerm = `${validArtists[0]} ${searchTitle}`;
 
       const search = await searchGenius(searchTerm, geniusApiToken);
-
-      // console.log(
-      //   "Genius search results:",
-      //   search?.hits.map(hit => hit.result.full_title)
-      // );
 
       if (!search || search.hits.length === 0) {
         continue;
